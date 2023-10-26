@@ -4,15 +4,22 @@ from scipy.io import loadmat
 import tensorflow as tf
 from tensorflow import keras
 from keras import metrics
+import numpy as np
 
-file_path = here("data/BRCA1View20000.mat")
+np.random.seed(7)
+tf.random.set_seed(7)
 
-data = loadmat("data/BRCA1View20000.mat")
+
+
+file_path = here("data/BRCA1View20000_smote.mat")
+
+data = loadmat(file_path)
 
 
 # read and process data
 x_input = data["data"].T
-y_input = data["targets"]
+y_input = data["targets"].reshape(-1,1)
+
 
 x_feat = (x_input - x_input.mean(axis=0, keepdims=True)) / x_input.std(
     axis=0, keepdims=True
@@ -24,7 +31,7 @@ y_input = keras.utils.to_categorical(y_input, num_classes=10)
 # model arguments
 model = CNNBiGRU()
 losses = keras.losses.CategoricalCrossentropy(from_logits=True)
-optimizer = keras.optimizers.Adam(learning_rate=1e-3)
+optimizer = keras.optimizers.Adam()
 
 
 # metrics
@@ -33,15 +40,15 @@ recall = metrics.Recall()
 f1 = metrics.F1Score()
 
 # callbacks
-csv_logger = tf.keras.callbacks.CSVLogger(here("logs/training.csv"))
+csv_logger = tf.keras.callbacks.CSVLogger(here("logs/training_smote.csv"))
 early_stopping = tf.keras.callbacks.EarlyStopping(
     monitor="val_acc",
     patience=20,
-    mode="min",
+    mode="max",
     restore_best_weights=True,
 )
 model_checkpoint = tf.keras.callbacks.ModelCheckpoint(
-    filepath=here("model_weight/best.keras"),
+    filepath=here("model_weight/best_smote.keras"),
     monitor="val_acc",
     save_best_only=True,
     mode="max",
@@ -51,7 +58,7 @@ model_checkpoint = tf.keras.callbacks.ModelCheckpoint(
 
 # Train arg
 epochs = 100
-batch_size = 512
+batch_size = 256
 val_split = 0.1
 
 # train
