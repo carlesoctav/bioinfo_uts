@@ -3,6 +3,7 @@ import tensorflow.keras as keras
 from scipy.io import loadmat
 from pyprojroot import here
 import numpy as np
+from keras.utils import plot_model
 
 
 def CNNBiGRU():
@@ -28,5 +29,6 @@ def CNNBiGRU():
     
 if __name__ == "__main__":
     model = CNNBiGRU()
-    model.save_weights("model_weight/best.keras")
+    
+    plot_model(model, to_file='model.png', show_shapes=True, show_layer_names=True)
     model.summary()
