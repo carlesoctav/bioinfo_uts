@@ -6,7 +6,8 @@ from tensorflow import keras
 from keras import metrics
 
 file_path = here("data/BRCA1View20000.mat")
-data = loadmat(file_path)
+
+data = loadmat("data/BRCA1View20000.mat")
 
 
 # read and process data
@@ -35,7 +36,7 @@ f1 = metrics.F1Score()
 csv_logger = tf.keras.callbacks.CSVLogger(here("logs/training.csv"))
 early_stopping = tf.keras.callbacks.EarlyStopping(
     monitor="val_acc",
-    patience=10,
+    patience=20,
     mode="min",
     restore_best_weights=True,
 )
@@ -50,7 +51,7 @@ model_checkpoint = tf.keras.callbacks.ModelCheckpoint(
 
 # Train arg
 epochs = 100
-batch_size = 10
+batch_size = 512
 val_split = 0.1
 
 # train
@@ -66,5 +67,5 @@ model.fit(
     epochs=epochs,
     batch_size=batch_size,
     validation_split=val_split,
-    callbacks=[csv_logger, early_stopping, model_checkpoint],
+    callbacks=[csv_logger, model_checkpoint,early_stopping],
 )
