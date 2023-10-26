@@ -27,13 +27,6 @@ def CNNBiGRU():
     return model
     
 if __name__ == "__main__":
-    data = here("data/BRCA1View20000.mat")
-    data  = loadmat(data)
-    print(f"==>> data: {data}")
-    x_input = data["data"]
-    y_input = np.unique(data["targets"])
-    print(f"==>> y_inpuy: {y_input}")
-    x_input = x_input.T[1:10,:]
-    print(f"==>> x_input: {x_input.shape}")
     model = CNNBiGRU()
-    print(model(x_input))
+    model.save_weights("model_weight/best.keras")
+    model.summary()
