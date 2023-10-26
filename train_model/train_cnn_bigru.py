@@ -5,6 +5,7 @@ import tensorflow as tf
 from tensorflow import keras
 from keras import metrics
 import numpy as np
+import tensorflow_addons as tfa
 
 np.random.seed(7)
 tf.random.set_seed(7)
@@ -19,6 +20,7 @@ data = loadmat(file_path)
 # read and process data
 x_input = data["data"].T
 y_input = data["targets"].reshape(-1,1)
+y_input = y_input - 1
 
 
 x_feat = (x_input - x_input.mean(axis=0, keepdims=True)) / x_input.std(
@@ -26,7 +28,7 @@ x_feat = (x_input - x_input.mean(axis=0, keepdims=True)) / x_input.std(
 )
 
 
-y_input = keras.utils.to_categorical(y_input, num_classes=10)
+y_input = keras.utils.to_categorical(y_input, num_classes=6)
 
 # model arguments
 model = CNNBiGRU()
@@ -38,6 +40,8 @@ optimizer = keras.optimizers.Adam()
 precision = metrics.Precision()
 recall = metrics.Recall()
 f1 = metrics.F1Score()
+CohenKappa = tfa.metrics.CohenKappa(num_classes=6, sparse_labels=True)
+HammingLoss = tfa.metrics.HammingLoss(mode="multilabel", threshold=0.5)
 
 # callbacks
 csv_logger = tf.keras.callbacks.CSVLogger(here("logs/training_smote.csv"))
@@ -65,7 +69,7 @@ val_split = 0.1
 model.compile(
     loss=losses,
     optimizer=optimizer,
-    metrics=["acc", precision, recall, f1],
+    metrics=["acc", precision, recall, f1, CohenKappa, HammingLoss],
 )
 
 model.fit(
