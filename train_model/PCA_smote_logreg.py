@@ -10,6 +10,7 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
+import matplotlib.pyplot as plt
 
 np.random.seed(7)
 tf.random.set_seed(7)
@@ -68,7 +69,7 @@ f1 = metrics.F1Score()
 # HammingLoss = tfa.metrics.HammingLoss(mode="multilabel", threshold=0.5)
 
 # # callbacks
-csv_logger = tf.keras.callbacks.CSVLogger(here("logs/training_pca_smote_logreg.csv"))
+csv_logger = tf.keras.callbacks.CSVLogger(here("logs/training_pca_logreg.csv"))
 
 early_stopping = tf.keras.callbacks.EarlyStopping(
     monitor="val_acc",
@@ -96,7 +97,7 @@ model.compile(
     metrics=["acc", precision, recall, f1],
 )
 
-model.fit(
+history = model.fit(
     x_train,
     y_train,
     batch_size=batch_size,
@@ -107,6 +108,16 @@ model.fit(
 )
 
 
+plt.plot(history.history["acc"])
+plt.plot(history.history["val_acc"])
+plt.legend(["acc", "val_acc"])
+plt.savefig(here("stdout_logs/pca_smote_logreg_acc.png"))
+plt.clf()
+
+plt.plot(history.history["loss"])
+plt.plot(history.history["val_loss"])
+plt.legend(["loss", "val_loss"])
+plt.savefig(here("stdout_logs/pca_smote_logreg_loss.png"))
 
 y_pred = model.predict(x_test)
 y_pred = np.argmax(y_pred, axis=1)

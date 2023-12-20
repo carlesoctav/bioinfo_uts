@@ -7,11 +7,12 @@ from keras import metrics
 import numpy as np
 import tensorflow_addons as tfa
 from sklearn.metrics import classification_report
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+import matplotlib.pyplot as plt
 
 np.random.seed(7)
 tf.random.set_seed(7)
-
-
 
 file_path = here("data/BRCA1View20000.mat")
 
@@ -22,20 +23,19 @@ data = loadmat(file_path)
 x_input = data["data"].T
 y_input = data["targets"].reshape(-1,1)
 y_input = y_input - 1
-
-
-x_feat = (x_input - x_input.mean(axis=0, keepdims=True)) / x_input.std(
-    axis=0, keepdims=True
-)
-
-
 y_input = keras.utils.to_categorical(y_input, num_classes=6)
+
+x_train, x_test, y_train, y_test = train_test_split( x_input, y_input, test_size=0.2, random_state=42)
+
+standard_scaler = StandardScaler()
+x_train = standard_scaler.fit_transform(x_train)
+x_test = standard_scaler.transform(x_test)
+
 
 # model arguments
 model = CNNBiGRU()
 losses = keras.losses.CategoricalCrossentropy(from_logits=True)
 optimizer = keras.optimizers.Adam()
-
 
 # metrics
 precision = metrics.Precision()
@@ -50,6 +50,7 @@ early_stopping = tf.keras.callbacks.EarlyStopping(
     mode="max",
     restore_best_weights=True,
 )
+
 model_checkpoint = tf.keras.callbacks.ModelCheckpoint(
     filepath=here("model_weight/best_smote.keras"),
     monitor="val_acc",
@@ -62,7 +63,6 @@ model_checkpoint = tf.keras.callbacks.ModelCheckpoint(
 # Train arg
 epochs = 100
 batch_size = 256
-val_split = 0.2
 
 # train
 model.compile(
@@ -71,15 +71,27 @@ model.compile(
     metrics=["acc", precision, recall, f1],
 )
 
-model.fit(
-    x_feat,
-    y_input,
+history = model.fit(
+    x_train,
+    y_train,
+    validation_data=(x_test, y_test),
     epochs=epochs,
     batch_size=batch_size,
-    validation_split=val_split,
-    callbacks=[csv_logger, model_checkpoint,early_stopping],
+    callbacks=[csv_logger, early_stopping, model_checkpoint],
 )
 
-y_pred = model.predict(x_feat)
+# plot 
+plt.plot(history.history["acc"])
+plt.plot(history.history["val_acc"])
+plt.legend(["acc", "val_acc"])
+plt.savefig(here("stdout_logs/cnn_bigru_acc.png"))
+plt.clf()
+
+plt.plot(history.history["loss"])
+plt.plot(history.history["val_loss"])
+plt.legend(["loss", "val_loss"])
+plt.savefig(here("stdout_logs/cnn_bigru_loss.png"))
+
+y_pred = model.predict(x_test)
 y_pred = np.argmax(y_pred, axis=1)
-print(classification_report(np.argmax(y_input, axis=1), y_pred))
+print(classification_report(np.argmax(y_test, axis=1), y_pred))
