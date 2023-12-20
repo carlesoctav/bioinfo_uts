@@ -25,7 +25,7 @@ def logreg():
     return model 
 
 
-file_path = here("data/BRCA1View20000.mat")
+file_path = here("data/BRCA1View20000_smote.mat")
 
 data = loadmat(file_path)
 
@@ -68,7 +68,7 @@ f1 = metrics.F1Score()
 # HammingLoss = tfa.metrics.HammingLoss(mode="multilabel", threshold=0.5)
 
 # # callbacks
-csv_logger = tf.keras.callbacks.CSVLogger(here("logs/training_pca_logreg.csv"))
+csv_logger = tf.keras.callbacks.CSVLogger(here("logs/training_pca_smote_logreg.csv"))
 
 early_stopping = tf.keras.callbacks.EarlyStopping(
     monitor="val_acc",
@@ -105,6 +105,7 @@ model.fit(
     callbacks=[csv_logger, early_stopping, model_checkpoint],
     verbose=1,
 )
+
 
 
 y_pred = model.predict(x_test)

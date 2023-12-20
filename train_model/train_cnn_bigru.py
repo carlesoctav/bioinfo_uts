@@ -6,13 +6,14 @@ from tensorflow import keras
 from keras import metrics
 import numpy as np
 import tensorflow_addons as tfa
+from sklearn.metrics import classification_report
 
 np.random.seed(7)
 tf.random.set_seed(7)
 
 
 
-file_path = here("data/BRCA1View20000_smote.mat")
+file_path = here("data/BRCA1View20000.mat")
 
 data = loadmat(file_path)
 
@@ -40,8 +41,6 @@ optimizer = keras.optimizers.Adam()
 precision = metrics.Precision()
 recall = metrics.Recall()
 f1 = metrics.F1Score()
-CohenKappa = tfa.metrics.CohenKappa(num_classes=6, sparse_labels=True)
-HammingLoss = tfa.metrics.HammingLoss(mode="multilabel", threshold=0.5)
 
 # callbacks
 csv_logger = tf.keras.callbacks.CSVLogger(here("logs/training_smote.csv"))
@@ -63,13 +62,13 @@ model_checkpoint = tf.keras.callbacks.ModelCheckpoint(
 # Train arg
 epochs = 100
 batch_size = 256
-val_split = 0.1
+val_split = 0.2
 
 # train
 model.compile(
     loss=losses,
     optimizer=optimizer,
-    metrics=["acc", precision, recall, f1, CohenKappa, HammingLoss],
+    metrics=["acc", precision, recall, f1],
 )
 
 model.fit(
@@ -80,3 +79,7 @@ model.fit(
     validation_split=val_split,
     callbacks=[csv_logger, model_checkpoint,early_stopping],
 )
+
+y_pred = model.predict(x_feat)
+y_pred = np.argmax(y_pred, axis=1)
+print(classification_report(np.argmax(y_input, axis=1), y_pred))

@@ -23,7 +23,7 @@ def CNNBiGRU():
     x = tf.keras.layers.Dropout(rate=0.6)(x)
     x = tf.keras.layers.Dense(32, activation='gelu', kernel_regularizer=tf.keras.regularizers.l2())(x)
     x = tf.keras.layers.Dropout(rate=0.7)(x)
-    outputs = tf.keras.layers.Dense(10)(x)
+    outputs = tf.keras.layers.Dense(6)(x)
     model = tf.keras.Model(inputs=inputs, outputs=outputs)
     return model
     
